@@ -12,6 +12,10 @@ int do_cd(int argc, char** argv) {
   if (!validate_cd_argv(argc, argv))
     return -1;
 
+  if (strcmp(argv[1],"~")==0){
+    chdir("/home/aeis/mysh-1");
+  }
+
   if (chdir(argv[1]) == -1)
     return -1;
 

@@ -2,9 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 #include "commands.h"
 #include "built_in.h"
+#include "signal_handlers.h"
 
 static struct built_in_command built_in_commands[] = {
   { "cd", do_cd, validate_cd_argv },
@@ -21,7 +26,6 @@ static int is_built_in_command(const char* command_name)
       return i;
     }
   }
-
   return -1; // Not found
 }
 
@@ -48,13 +52,58 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
     } else if (strcmp(com->argv[0], "") == 0) {
       return 0;
     } else if (strcmp(com->argv[0], "exit") == 0) {
-      return 1;
+	exit(1);
+      //return 1;
     } else {
-      fprintf(stderr, "%s: command not found\n", com->argv[0]);
-      return -1;
+	pid_t pID = fork();
+	int status1, status2, status3, status4, status5;
+	//char* cmd[] = {"ls", "-F", NULL};
+	char buffer[100] = "/bin/";
+	char buffer2[100] = "/usr/bin/";
+	char buffer3[100] = "/sbin/";
+	char buffer4[100] = "/usr/sbin/";
+	char* ptr, *ptr2, *ptr3, *ptr4;
+	ptr = strcat(buffer, com->argv[0]);
+	ptr2 = strcat(buffer2, com->argv[0]);
+	ptr3 = strcat(buffer3, com->argv[0]);
+	ptr4 = strcat(buffer4, com->argv[0]);
+	switch(pID){
+	case 0:{ //child
+	status1 = execv(com->argv[0], com->argv);
+	status2 = execv(ptr, com->argv);
+	status3 = execv(ptr2, com->argv);
+	status4 = execv(ptr3, com->argv);
+	status5 = execv(ptr4, com->argv);
+	if(status1 == -1 | status2 == -1 | status3 == -1| status4 == -1 | status5 == -1){
+	 perror("execv failed");
+	 break;
+	}
+	}
+	case -1:{
+	break;
+	}
+	default:{ //parent
+	wait((int*)0);
+	break;
+	}
+	} 
+	
+/*      if(pID == 0){    			//child process 
+	execv(com->argv[0], com->argv);
+
+	perror("execve failed");
+	return -1;
+      }else if(pID > 0){
+	wait((int*)0);
+	return -1;
+      }
+      else{		
+	perror("fork failed");
+	return -1;	
+      }
+*/
     }
   }
-
   return 0;
 }
 

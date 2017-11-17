@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include "commands.h"
 #include "built_in.h"
 #include "utils.h"
-
+#include "signal_handlers.h"
 int main()
 {
   char buf[8096];
@@ -16,6 +18,11 @@ int main()
     struct single_command commands[512];
     int n_commands = 0;
     mysh_parse_command(buf, &n_commands, &commands);
+      signal(SIGINT, catch_sigint);
+      //sleep(100);
+      signal(SIGTSTP, catch_sigtstp);
+      //sleep(100);
+
 
     int ret = evaluate_command(n_commands, &commands);
 
